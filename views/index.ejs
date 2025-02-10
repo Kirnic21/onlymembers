@@ -7,7 +7,10 @@
 <body>
   <% if (locals.user) {%>
     <h1>WELCOME BACK <%= user.username %></h1>
+    
     <a href="/log-out">LOG OUT</a>
+    
+    <a href="/member">get member ur dounce</a>
   <% } else { %>
     <h1>please log in</h1>
     <form action="/log-in" method="POST">
@@ -17,6 +20,7 @@
       <input id="password" name="password" type="password" />
       <button>Log In</button>
     </form>
+    
   <%}%>
 </body>
 </html>

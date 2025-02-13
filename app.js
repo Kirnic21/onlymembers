@@ -21,13 +21,16 @@ const pool = new Pool({
   port: process.env.PGPORT,
   database: process.env.PGDATABASE
 });
-
+pool.query("SELECT 1")
+  .then(() => console.log("✅ Database connected!"))
+  .catch(err => console.error("❌ Database connection error:", err));
 const app = express();
 app.use(express.static(assetsPath));
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "ejs");
 
 app.use(session({ secret: "cats", resave: false, saveUninitialized: false }));
+
 app.use(passport.session());
 app.use(express.urlencoded({ extended: false }));
 app.get("/", async (req, res) => {

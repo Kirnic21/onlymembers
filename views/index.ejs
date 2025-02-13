@@ -2,25 +2,53 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title></title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
 </head>
 <body>
-  <% if (locals.user) {%>
+  <% if (user) { %>
     <h1>WELCOME BACK <%= user.username %></h1>
-    
-    <a href="/log-out">LOG OUT</a>
-    
-    <a href="/member">get member ur dounce</a>
+
+    <nav>
+      <a href="/log-out">LOG OUT</a>
+      <a href="/member">GET MEMBER</a>
+      <a href="/message">Send message</a>
+    </nav>
+
+    <h2>Messages</h2>
+
+    <ul>
+      <% if (user.ismember || user.isadmin) { %>
+        <% message.forEach(message => { %>
+          <li>
+            <strong><%= message.username %></strong>: <%= message.message %>
+            <% if (user.isadmin) { %>
+              <form action="/<%= message.id %>/delete" method="POST" style="display:inline;">
+                <button type="submit">Delete</button>
+              </form>
+            <% } %>
+          </li>
+        <% }) %>
+      <% } else { %>
+        <% messages.forEach(message => { %>
+          <li>Anonymous: <%= message.message %></li>
+        <% }) %>
+      <% } %>
+    </ul>
+
   <% } else { %>
-    <h1>please log in</h1>
+    <h1>Please log in</h1>
     <form action="/log-in" method="POST">
       <label for="username">Username</label>
-      <input id="username" name="username" placeholder="username" type="text" />
+      <input id="username" name="username" type="text" required />
+
       <label for="password">Password</label>
-      <input id="password" name="password" type="password" />
-      <button>Log In</button>
+      <input id="password" name="password" type="password" required />
+
+      <button type="submit">Log In</button>
     </form>
-    
-  <%}%>
+
+    <a href="/sign-up">Sign up!</a>
+  <% } %>
 </body>
 </html>

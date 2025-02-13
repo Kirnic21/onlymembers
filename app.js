@@ -9,7 +9,8 @@ const express = require("express");
 const session = require("express-session");
 const passport = require("passport");
 const LocalStrategy = require('passport-local').Strategy;
-const bcrypt = require("bcryptjs")
+const bcrypt = require("bcryptjs");
+const { localsName } = require('ejs');
 const assetsPath = path.join(__dirname, "public");
 
 const pool = new Pool({
@@ -29,8 +30,10 @@ app.set("view engine", "ejs");
 app.use(session({ secret: "cats", resave: false, saveUninitialized: false }));
 app.use(passport.session());
 app.use(express.urlencoded({ extended: false }));
-app.get("/", (req, res) => {
-    res.render("index", { user: req.user });
+app.get("/", async (req, res) => {
+    const {rows:messages  } = await pool.query("SELECT messages.id,messages.message,onlymember.username FROM messages JOIN onlymember ON messages.user_id = onlymember.id")
+    
+    res.render("index", { user: req.user,message: messages});
   });
   app.use(express.static(assetsPath));
 
@@ -47,7 +50,8 @@ app.post(
   app.post("/sign-up", async (req, res, next) => {
     try {
      const hashedPassword = await bcrypt.hash(req.body.password, 10);
-     await pool.query("insert into onlymember (username, password,firstname,secondname,ismember) values ($1, $2,$3,$4,$5)", [req.body.username, hashedPassword,req.body.firstname,req.body.secondname,ismember = false]);
+     const imadmin = Boolean(req.body.imadmin);
+     await pool.query("insert into onlymember (username, password,firstname,secondname,ismember,isadmin) values ($1, $2,$3,$4,$5,$6)", [req.body.username, hashedPassword,req.body.firstname,req.body.secondname,ismember = false,imadmin])
      res.redirect("/");
     } catch (error) {
        console.error(error);
@@ -61,7 +65,7 @@ passport.use(
       try {
         const { rows } = await pool.query("SELECT * FROM onlymember WHERE username = $1", [username]);
         const user = rows[0];
-  
+       
         if (!user) {
           return done(null, false, { message: "Incorrect username" });
         }
@@ -115,4 +119,19 @@ passport.use(
     res.redirect("/")
 
   }) 
+  app.get("/message",(req,res)=>{
+    res.render("message")
+  })
+  app.post("/message",async (req,res)=>{
+    const id = req.user.id
+
+    const text = req.body.message
+    await pool.query("INSERT into messages (user_id,message) values($1,$2)",[id,text])
+    res.redirect("/")
+  })
+  app.post("/:id/delete", async(req,res)=>{
+    const messageId = req.params.id
+    await pool.query("DELETE FROM messages WHERE id = $1", [messageId]);
+    res.redirect("/");
+  })
 app.listen(3000, () => console.log("app listening on port 3000!"));
